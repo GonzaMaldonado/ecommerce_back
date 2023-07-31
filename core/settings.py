@@ -8,9 +8,12 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-*b4hk5+72r5fbbf*xv^tn%@2eadtqw4c1f1@fs^a3()%@3m33a'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 
@@ -37,6 +40,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -102,10 +108,24 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'dist/static')
+]
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUTH_USER_MODEL = 'users.User'
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -114,23 +134,27 @@ REST_FRAMEWORK = {
   }
 
 SIMPLE_JWT = {
-      'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+      'ACCESS_TOKEN_LIFETIME': timedelta(hours=5),
       'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-      'ROTATE_REFRESH_TOKENS': False,
+      'ROTATE_REFRESH_TOKENS': True,
       'BLACKLIST_AFTER_ROTATION': True,
 
       'ALGORITHM': 'HS256',
-      'SIGNING_KEY': settings.SECRET_KEY,
-      'VERIFYING_KEY': None,
+      'VERIFYING_KEY': SECRET_KEY,
       'AUDIENCE': None,
       'ISSUER': None,
+      'JWT_URL': None,
+      'LEEWAY': 0,
 
       'AUTH_HEADER_TYPES': ('Bearer',),
+      'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
       'USER_ID_FIELD': 'id',
       'USER_ID_CLAIM': 'user_id',
+      'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication',
 
       'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
       'TOKEN_TYPE_CLAIM': 'token_type',
+      'TOKEN_USER_CLAIM': 'rest_framework_simplejwt.models.TokenUser',
 
       'JTI_CLAIM': 'jti',
   }
